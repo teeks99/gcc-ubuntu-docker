@@ -9,7 +9,7 @@ RUN apt-get update \
 # Install pre-reqs
  && apt-get update \
  && apt-get install -y \
-  build-essential
+  build-essential \
 
 # Install Tool
   gcc-4.9 \
