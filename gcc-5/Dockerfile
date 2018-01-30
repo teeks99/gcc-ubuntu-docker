@@ -2,12 +2,16 @@ FROM ubuntu:trusty
 MAINTAINER Thomas Kent <teeks99@yahoo.com>
 
 # Enable PPA
-RUN apt-get update && apt-get install -y software-properties-common && add-apt-repository -y ppa:ubuntu-toolchain-r/test
+RUN apt-get update \
+ && apt-get install -y software-properties-common \
+ && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
 
 # Install pre-reqs
-RUN apt-get update && apt-get install -y \
- build-essential \
+ && apt-get update \
+ && apt-get install -y \
+  build-essential \
 
 # Install Tool
-RUN apt-get update && apt-get install -y gcc-5 g++-5 
+  gcc-5 \
+  g++-5 
 
