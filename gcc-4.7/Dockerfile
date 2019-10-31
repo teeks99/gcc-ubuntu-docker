@@ -1,10 +1,9 @@
-FROM ubuntu:precise
+FROM ubuntu:trusty
 MAINTAINER Thomas Kent <teeks99@yahoo.com>
 
 # Enable future toolchain PPA
 RUN apt-get update \
  && apt-get install -y python-software-properties \
- && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
 
 # Install pre-reqs
  && apt-get update \
