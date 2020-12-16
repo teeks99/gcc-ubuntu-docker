@@ -1,4 +1,4 @@
-FROM ubuntu:bionic
+FROM ubuntu:focal
 MAINTAINER Thomas Kent <docker@teeks99.com>
 
 # Pre-Req Repos
