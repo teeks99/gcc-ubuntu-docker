@@ -8,11 +8,11 @@ options = None
 
 versions = [
     # Precise
-    "4.4", "4.5",
+    # "4.4", "4.5",
     # Trusty
-    "4.6", "4.7", "4.8", "4.9", "5", "6"
+    "4.6", "4.7", "4.8", "4.9", "5", "6",
     # Xenial
-    "7", 
+    "7",
     # Bionic
     "8",
     # Focal
@@ -24,7 +24,7 @@ test_versions = {}
 
 def update_base_images():
     if not options.no_update_base:
-        subprocess.check_call("docker pull ubuntu:precise", shell=True)
+        # subprocess.check_call("docker pull ubuntu:precise", shell=True)
         subprocess.check_call("docker pull ubuntu:trusty", shell=True)
         subprocess.check_call("docker pull ubuntu:xenial", shell=True)
         subprocess.check_call("docker pull ubuntu:bionic", shell=True)
