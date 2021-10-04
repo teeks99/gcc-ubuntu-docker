@@ -10,6 +10,10 @@ RUN apt-get update \
  && apt-get install -y \
   ca-certificates \
   build-essential \
+# User requested
+  apt-utils \
+  dialog \  
+  locales \
 # Install Tool
   gcc-11 \
   g++-11
