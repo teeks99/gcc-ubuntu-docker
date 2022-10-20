@@ -18,7 +18,7 @@ versions = [
     # Focal
     "9", "10", "11",
     # Jammy
-    "12"
+    "12", "m"
     ]
 
 test_versions = {}
