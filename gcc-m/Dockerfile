@@ -1,7 +1,7 @@
 FROM ubuntu:jammy
 MAINTAINER Thomas Kent <docker@teeks99.com>
-ARG gccver=mainline
-ARG suffix=m
+ARG gccver=13.0
+ARG suffix=13
 
 # Pre-Req Repos
 RUN set -x \
