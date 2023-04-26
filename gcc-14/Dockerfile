@@ -1,7 +1,7 @@
 FROM ubuntu:jammy
 MAINTAINER Thomas Kent <docker@teeks99.com>
-ARG gccver=13.1.0
-ARG suffix=13
+ARG gccver=14.0
+ARG suffix=14
 
 # Pre-Req Repos
 RUN set -x \
@@ -24,9 +24,9 @@ RUN set -x \
   bison \
  && mkdir /src \
  && cd /src \
- && wget -nv https://mirrors.concertpass.com/gcc/releases/gcc-${gccver}/gcc-${gccver}.tar.gz \
- && tar -xf gcc-${gccver}.tar.gz \
- # && git clone --depth 1 --branch master git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
+# && wget -nv https://mirrors.concertpass.com/gcc/releases/gcc-${gccver}/gcc-${gccver}.tar.gz \
+# && tar -xf gcc-${gccver}.tar.gz \
+ && git clone --depth 1 --branch master git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
  && cd gcc-${gccver} \
  && contrib/download_prerequisites \
  && cd .. \
