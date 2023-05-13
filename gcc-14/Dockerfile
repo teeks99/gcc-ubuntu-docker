@@ -48,4 +48,9 @@ RUN set -x \
  && make install-strip \
  && echo /usr/local/gcc-${gccver}/lib64 > /etc/ld.so.conf.d/gcc-${gccver}.conf \
  && cd / \
- && rm -rf src
+ && rm -rf src \
+# Symlink new version of g++, gcc
+ && rm /usr/bin/g++ \ 
+ && ln -s /usr/bin/g++-{$suffix} /usr/bin/g++ \
+ && rm /usr/bin/gcc \
+ && ln -s /usr/bin/gcc-{$suffix} /usr/bin/gcc
