@@ -49,6 +49,6 @@ RUN set -x \
  && rm -rf src \
 # Symlink new version of g++, gcc
  && rm /usr/bin/g++ \ 
- && ln -s /usr/bin/g++-{$suffix} /usr/bin/g++ \
+ && ln -s /usr/bin/g++-${suffix} /usr/bin/g++ \
  && rm /usr/bin/gcc \
- && ln -s /usr/bin/gcc-{$suffix} /usr/bin/gcc
+ && ln -s /usr/bin/gcc-${suffix} /usr/bin/gcc
