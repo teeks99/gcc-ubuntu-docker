@@ -23,7 +23,8 @@ RUN set -x \
   bison \
  && mkdir /src \
  && cd /src \
- && wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
+ #&& wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
+ && wget -nv https://sourceware.org/pub/gcc/releases/gcc-${gccver}/gcc-${gccver}.tar.gz \
  && tar -xf gcc-${gccver}.tar.gz \
  && cd gcc-${gccver} \
  && contrib/download_prerequisites \
