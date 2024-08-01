@@ -1,6 +1,6 @@
 FROM ubuntu:jammy
 MAINTAINER Thomas Kent <docker@teeks99.com>
-ARG gccver=14.1.0
+ARG gccver=14.2.0
 ARG suffix=14
 
 # Pre-Req Repos
