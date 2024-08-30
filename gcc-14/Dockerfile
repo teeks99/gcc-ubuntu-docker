@@ -1,4 +1,4 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 MAINTAINER Thomas Kent <docker@teeks99.com>
 ARG gccver=14.2.0
 ARG suffix=14
