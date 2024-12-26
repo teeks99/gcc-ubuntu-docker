@@ -20,7 +20,9 @@ versions = [
     # Focal
     "9", "10", "11",
     # Jammy
-    "12", "13", "14"
+    "12", "13", 
+    # Noble
+    "14", "15",
     ]
 
 test_versions = {}
@@ -42,6 +44,7 @@ def update_base_images():
         subprocess.check_call("docker pull ubuntu:bionic", shell=True)
         subprocess.check_call("docker pull ubuntu:focal", shell=True)
         subprocess.check_call("docker pull ubuntu:jammy", shell=True)
+        subprocess.check_call("docker pull ubuntu:noble", shell=True)
 
 
 def run_my_cmd(cmd):
