@@ -68,7 +68,7 @@ def build(version):
 
 def test(image, test_version):
     cmd = f"docker run --rm {image.image} g++-{test_version} --version"
-    re_expected = f"g\+\+-{test_version}.*\) {test_version}\."
+    re_expected = f"g\\+\\+-{test_version}.*\\) {test_version}\\."
     try:
         print(cmd)
         output = subprocess.check_output(cmd, shell=True)
