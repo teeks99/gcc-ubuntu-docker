@@ -3,8 +3,13 @@ MAINTAINER Thomas Kent <docker@teeks99.com>
 ARG gccver=14.2.0
 ARG suffix=14
 
-# Pre-Req Repos
-RUN set -x \
+RUN echo staring build with $release \
+ && set -x \
+ # Remove the default 'ubuntu' non-root user, we will create our own at runtime
+ && touch /var/mail/ubuntu \
+ && chown ubuntu /var/mail/ubuntu \
+ && userdel -r ubuntu \
+ # Basic prereqs
  && apt-get update \
  && apt-get install -y software-properties-common \
 # Install pre-reqs
