@@ -1,5 +1,5 @@
 FROM ubuntu:xenial
-MAINTAINER Thomas Kent <docker@teeks99.com>
+LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
 
 # Pre-Req Repos
 RUN apt-get update \

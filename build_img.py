@@ -22,7 +22,7 @@ versions = [
     # Jammy
     "12", "13", 
     # Noble
-    "14", "15",
+    "14", "15", "16"
     ]
 
 test_versions = {}

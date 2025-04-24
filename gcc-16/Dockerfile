@@ -1,10 +1,15 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
-ARG gccver=13.3.0
-ARG suffix=13
+ARG gccver=16.0
+ARG suffix=16
 
-# Pre-Req Repos
-RUN set -x \
+RUN echo staring build with $release \
+ && set -x \
+ # Remove the default 'ubuntu' non-root user, we will create our own at runtime
+ && touch /var/mail/ubuntu \
+ && chown ubuntu /var/mail/ubuntu \
+ && userdel -r ubuntu \
+ # Basic prereqs
  && apt-get update \
  && apt-get install -y software-properties-common \
 # Install pre-reqs
@@ -24,9 +29,9 @@ RUN set -x \
   bison \
  && mkdir /src \
  && cd /src \
- && wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
- && tar -xf gcc-${gccver}.tar.gz \
- # && git clone --depth 1 --branch master git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
+# && wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
+# && tar -xf gcc-${gccver}.tar.gz \
+ && git clone --depth 1 --branch master git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
  && cd gcc-${gccver} \
  && contrib/download_prerequisites \
  && cd .. \

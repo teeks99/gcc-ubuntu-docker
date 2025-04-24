@@ -1,5 +1,5 @@
 FROM ubuntu:trusty
-MAINTAINER Thomas Kent <teeks99@yahoo.com>
+LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
 
 # Enable future toolchain PPA
 RUN apt-get update \
