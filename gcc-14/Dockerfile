@@ -1,6 +1,6 @@
 FROM ubuntu:noble
 LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
-ARG gccver=14.2.0
+ARG gccver=14.3.0
 ARG suffix=14
 
 RUN echo staring build with $release \
