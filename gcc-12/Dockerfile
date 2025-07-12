@@ -1,6 +1,6 @@
 FROM ubuntu:jammy
 LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
-ARG gccver=12.4.0
+ARG gccver=12.5.0
 ARG suffix=12
 
 # Pre-Req Repos
