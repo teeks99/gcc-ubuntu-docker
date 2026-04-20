@@ -1,4 +1,4 @@
-FROM ubuntu:trusty
+FROM ubuntu:bionic
 LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
 
 # Enable PPA
