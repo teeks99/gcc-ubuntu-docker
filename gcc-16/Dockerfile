@@ -1,6 +1,6 @@
 FROM ubuntu:noble
 LABEL org.opencontainers.image.authors="Thomas Kent <docker@teeks99.com>"
-ARG gccver=16.0
+ARG gccver=16.1.0
 ARG suffix=16
 
 RUN echo staring build with $release \
@@ -29,9 +29,9 @@ RUN echo staring build with $release \
   bison \
  && mkdir /src \
  && cd /src \
- && wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
- && tar -xf gcc-${gccver}.tar.gz \
-# && git clone --depth 1 --branch master git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
+ #&& wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
+ #&& tar -xf gcc-${gccver}.tar.gz \
+ && git clone --depth 1 --branch releases/gcc-$(suffix) git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
  && cd gcc-${gccver} \
  && contrib/download_prerequisites \
  && cd .. \
