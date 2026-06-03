@@ -1,0 +1,96 @@
+name: Build Legacy GCC Docker Images
+
+on:
+  schedule:
+    - cron: '0 0 1 5,11 *' # May 1st and Nov 1st at midnight
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.set-versions.outputs.versions }}
+    steps:
+      - id: set-versions
+        run: echo 'versions=["9", "10", "11", "12", "13", "14"]' >> "$GITHUB_OUTPUT"
+
+  build-amd64:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.setup.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and Push AMD64
+        run: |
+          python build_img.py -v ${{ matrix.version }} -r teeks99/gcc-ubuntu -p -T -l amd64_log.json --arch
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amd64-log-${{ matrix.version }}
+          path: amd64_log.json
+
+  build-arm64:
+    needs: setup
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.setup.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and Push ARM64
+        run: |
+          python build_img.py -v ${{ matrix.version }} -r teeks99/gcc-ubuntu -p -T -l arm64_log.json --arch
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-log-${{ matrix.version }}
+          path: arm64_log.json
+
+  create-manifest:
+    needs: [setup, build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJson(needs.setup.outputs.versions) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Download AMD64 Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: amd64-log-${{ matrix.version }}
+          path: amd64-log
+      - name: Download ARM64 Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: arm64-log-${{ matrix.version }}
+          path: arm64-log
+      - name: Parse and Create Manifest
+        run: |
+          AMD64_TAG=$(jq -r '.versions["${{ matrix.version }}"].timestamp' amd64-log/amd64_log.json)
+          ARM64_TAG=$(jq -r '.versions["${{ matrix.version }}"].timestamp' arm64-log/arm64_log.json)
+          echo "AMD64 tag: $AMD64_TAG"
+          echo "ARM64 tag: $ARM64_TAG"
+          python build_img.py -v ${{ matrix.version }} -r teeks99/gcc-ubuntu --manifest-only $AMD64_TAG $ARM64_TAG
