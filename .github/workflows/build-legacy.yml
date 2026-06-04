@@ -15,7 +15,7 @@ jobs:
       versions: ${{ steps.set-versions.outputs.versions }}
     steps:
       - id: set-versions
-        run: echo 'versions=["9", "10", "11", "12", "13", "14"]' >> "$GITHUB_OUTPUT"
+        run: echo 'versions=["9", "10", "11", "12", "13", "14", "15"]' >> "$GITHUB_OUTPUT"
 
   build-amd64:
     needs: setup
