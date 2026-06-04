@@ -65,3 +65,10 @@ jobs:
           echo "AMD64 tag: $AMD64_TAG"
           echo "ARM64 tag: $ARM64_TAG"
           python build_img.py -v ${{ env.GCC_VERSION }} -r teeks99/gcc-ubuntu --manifest-only $AMD64_TAG $ARM64_TAG --latest
+      - name: Trigger boost-cpp-docker build
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BOOST_CPP_PAT }}
+          repository: teeks99/boost-cpp-docker
+          event-type: build-boost-image
+          client-payload: '{"compiler": "gcc", "version": "${{ env.GCC_VERSION }}"}'
