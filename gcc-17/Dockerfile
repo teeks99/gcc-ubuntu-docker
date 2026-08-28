@@ -43,6 +43,8 @@ RUN echo staring build with $release \
  && ../gcc-${gccver}/configure \
   -v \
   --enable-checking=release \
+# This is only for development branch, take out when moving to a release
+  --disable-werror \
   --enable-shared \
   --enable-threads=posix \
   --enable-__cxa_atexit \
