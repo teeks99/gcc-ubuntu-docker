@@ -27,6 +27,8 @@ RUN echo staring build with $release \
   m4 \
   flex \
   bison \
+  texinfo \
+  gawk \
  && mkdir /src \
  && cd /src \
 # && wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
