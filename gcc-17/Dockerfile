@@ -29,15 +29,21 @@ RUN echo staring build with $release \
   bison \
   texinfo \
   gawk \
+# Build dependencies for GCC
+  libgmp-dev \
+  libmpfr-dev \
+  libmpc-dev \
+  libisl-dev \
  && mkdir /src \
  && cd /src \
 # && wget -nv https://ftp.gnu.org/gnu/gcc/gcc-${gccver}/gcc-${gccver}.tar.gz \
 # && tar -xf gcc-${gccver}.tar.gz \
 # && git clone --depth 1 --branch releases/gcc-${suffix} git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
  && git clone --depth 1 --branch master git://gcc.gnu.org/git/gcc.git gcc-${gccver} \
- && cd gcc-${gccver} \
- && contrib/download_prerequisites \
- && cd .. \
+# && cd gcc-${gccver} \
+# Manually installing the dependencies above
+# && contrib/download_prerequisites \
+# && cd .. \
  && mkdir build \
  && cd build \
  && ../gcc-${gccver}/configure \
