@@ -65,6 +65,10 @@ jobs:
 
   create-manifest:
     needs: [setup, build-amd64, build-arm64]
+    # Run even when another version's build failed, so the versions that did
+    # build on both arches still get a manifest. A version whose build failed
+    # has no log artifact, so its own download step fails and skips the rest.
+    if: ${{ !cancelled() && needs.setup.result == 'success' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
