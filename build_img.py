@@ -37,6 +37,7 @@ class Image(object):
     def image(self):
         return f"{self.repo}:{self.tag}"
 
+
 def run_my_cmd(cmd):
     try:
         print(cmd)
@@ -44,6 +45,7 @@ def run_my_cmd(cmd):
     except Exception:
         print("Failure in command: " + cmd)
         raise
+
 def build(version):
     image = Image(options.repo, version)
 
@@ -51,8 +53,11 @@ def build(version):
     if options.no_force:
         force = ""
 
-    cmd = f"docker build --pull {force} --tag {image.image} gcc-{version}"
+    pull = "--pull"
+    if options.no_update_base:
+        pull = ""
 
+    cmd = f"docker build --pull {force} --tag {image.image} gcc-{version}"
     run_my_cmd(cmd)
     return image
 
@@ -76,7 +81,7 @@ def test(image, test_version):
 
 
 def tag_timestamp(base_image, version):
-    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M")
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M")
     arch_str = f"_{options.arch}" if options.arch else ""
     tag = f"{version}{arch_str}_{timestamp}"
     image = Image(options.repo, tag)
@@ -135,7 +140,7 @@ def build_one(version, push_latest=False):
 
     if options.manifest_only:
         amend_tags = options.manifest_only
-        timestamp = datetime.datetime.utcnow().strftime("%Y%m%d_%H%M")
+        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M")
         time_tag = f"{version}_{timestamp}"
         
         create_and_push_manifest(time_tag, amend_tags)
@@ -255,6 +260,7 @@ def set_options():
     if options.manifest_only and len(options.version) > 1:
         raise RuntimeError("Cannot support manifest-only with multiple versions")
 
+
 def run():
     set_options()
     push_log["repo"] = options.repo
@@ -277,6 +283,7 @@ def run():
     if options.log_file:
         with open(options.log_file, "w") as f:
             json.dump(push_log, f)
+
 
 if __name__ == "__main__":
     run()
