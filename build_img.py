@@ -38,7 +38,7 @@ def build(version):
     if options.no_update_base:
         pull = ""
 
-    cmd = f"docker build --pull {force} --tag {image.image} gcc-{version}"
+    cmd = f"docker build {pull} {force} --tag {image.image} gcc-{version}"
     run_my_cmd(cmd)
     return image
 
