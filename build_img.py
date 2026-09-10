@@ -9,25 +9,6 @@ import platform
 options = None
 push_log = {"versions":{}}
 
-versions = [
-    # Precise
-    # "4.4", "4.5",
-    # Trusty
-    # "4.6", "4.7", "4.8", "4.9", "5", 
-    # Xenial
-    #
-    # Bionic
-    "6", "7", "8",
-    # Focal
-    "9", "10", "11",
-    # Jammy
-    "12", "13", 
-    # Noble
-    "14", "15", "16", "17"
-    ]
-
-test_versions = {}
-
 class Image(object):
     def __init__(self, repo, tag):
         self.repo = repo
@@ -73,7 +54,7 @@ def test(image, test_version):
             msg += f"Not found in actual output: \n{output}\n"
             raise AssertionError(msg)
         else:
-            print("Corectly got:")
+            print("Correctly got:")
             print(output.decode())
     except Exception:
         print("Failure in command: " + cmd)
@@ -124,14 +105,6 @@ def remove_image(image):
     run_my_cmd(cmd)
 
 
-def all():
-    for version in versions:
-        latest = False
-        if options.latest and version == versions[-1]:
-            latest = True
-        build_one(version, latest)
-
-
 def build_one(version, push_latest=False):
     tags = []
     base_image = None
@@ -142,12 +115,12 @@ def build_one(version, push_latest=False):
         amend_tags = options.manifest_only
         timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M")
         time_tag = f"{version}_{timestamp}"
-        
+
         create_and_push_manifest(time_tag, amend_tags)
         create_and_push_manifest(version, amend_tags)
         if push_latest:
             create_and_push_manifest("latest", amend_tags)
-        
+
         pushes = {}
         pushes["timestamp"] = time_tag
         if push_latest:
@@ -159,11 +132,7 @@ def build_one(version, push_latest=False):
         base_image = build(version)
 
     if not options.no_test:
-        tv = version
-        if version in test_versions:
-            tv = test_versions[version]
-
-        test(base_image, tv)
+        test(base_image, version)
 
     if not options.no_tag_timestamp:
         time_image = tag_timestamp(base_image, version)
@@ -203,9 +172,8 @@ def set_options():
     parser = argparse.ArgumentParser(
         description="Build one or more docker images for gcc-ubuntu")
     parser.add_argument(
-        "-v", "--version", action="append",
-        help="Use one of more times to specify the versions to run, skip"
-        + " for all")
+        "-v", "--version", action="append", required=True,
+        help="Use one or more times to specify the versions to run")
     parser.add_argument(
         "--no-update-base", action="store_true",
         help="Don't update the base images")
@@ -274,11 +242,9 @@ def run():
         else:
             options.arch = machine
 
-    if options.version:
-        global versions
-        versions = options.version
-
-    all()
+    for version in options.version:
+        latest = options.latest and version == options.version[-1]
+        build_one(version, latest)
 
     if options.log_file:
         with open(options.log_file, "w") as f:
