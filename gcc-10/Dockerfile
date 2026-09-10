@@ -12,4 +12,3 @@ RUN apt-get update \
 # Install Tool
   gcc-10 \
   g++-10
-

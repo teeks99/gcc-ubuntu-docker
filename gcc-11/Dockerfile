@@ -14,7 +14,7 @@ RUN set -x \
   build-essential \
 # User requested
   apt-utils \
-  dialog \  
+  dialog \
   locales \
   wget \
 # Install Tool
@@ -48,7 +48,7 @@ RUN set -x \
  && cd / \
  && rm -rf src \
 # Symlink new version of g++, gcc
- && rm /usr/bin/g++ \ 
+ && rm /usr/bin/g++ \
  && ln -s /usr/bin/g++-${suffix} /usr/bin/g++ \
  && rm /usr/bin/gcc \
  && ln -s /usr/bin/gcc-${suffix} /usr/bin/gcc

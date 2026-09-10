@@ -20,7 +20,7 @@ RUN echo staring build with $release \
   git \
 # User requested
   apt-utils \
-  dialog \  
+  dialog \
   locales \
   wget \
 # Install Tool
@@ -66,7 +66,7 @@ RUN echo staring build with $release \
  && cd / \
  && rm -rf src \
 # Symlink new version of g++, gcc
- && rm /usr/bin/g++ \ 
+ && rm /usr/bin/g++ \
  && ln -s /usr/bin/g++-${suffix} /usr/bin/g++ \
  && rm /usr/bin/gcc \
  && ln -s /usr/bin/gcc-${suffix} /usr/bin/gcc

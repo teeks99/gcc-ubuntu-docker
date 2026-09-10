@@ -206,7 +206,7 @@ def set_options():
         "-m", "--manifest-add", action="append",
         help="Generate a manifest for the version supplied, using the" +
         " timestamp upload as the first version add the timestamp(s)" +
-        " specified here as additional versions. Used for generating" + 
+        " specified here as additional versions. Used for generating" +
         " multiarch images on different machines.")
     parser.add_argument(
         "--manifest-only", nargs="+",
