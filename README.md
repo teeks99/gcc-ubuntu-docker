@@ -11,7 +11,6 @@ version will build against.
 
 | GCC | Ubuntu base | Built from | Built by |
 | --- | ----------- | ---------- | -------- |
-| 9, 10 | `focal` (20.04) | Ubuntu `gcc-<version>` packages | legacy workflow |
 | 11, 12, 13 | `jammy` (22.04) | Release tarball (11.5.0, 12.5.0, 13.4.0) | legacy workflow |
 | 14, 15 | `noble` (24.04) | Release tarball (14.4.0, 15.3.0) | legacy workflow |
 | 16 | `noble` (24.04) | `releases/gcc-16` git branch | current workflow (also tagged `latest`) |
