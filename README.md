@@ -122,9 +122,9 @@ the manifest job:
 
 ## Automated builds
 
-Three GitHub Actions workflows in [.github/workflows](.github/workflows) build on
-`ubuntu-latest` and `ubuntu-24.04-arm`, then join the two into a manifest. All three can
-also be started by hand with `workflow_dispatch`, and each one triggers a matching
+Four GitHub Actions workflows in [.github/workflows](.github/workflows) build on
+`ubuntu-latest` and `ubuntu-24.04-arm`, then join the two into a manifest. All of them can
+be started by hand with `workflow_dispatch`, and each one triggers a matching
 [teeks99/boost-cpp-docker](https://github.com/teeks99/boost-cpp-docker) build when it
 finishes.
 
@@ -133,17 +133,34 @@ finishes.
 | `build-current.yml` | Monthly, 1st at 00:00 UTC | 16, and updates `latest` |
 | `build-legacy.yml` | May 1 and Nov 1 | 9–15, one matrix job per version |
 | `build-prerelease.yml` | Weekly, Sundays | 17 |
+| `build-one.yml` | Manual only | Whichever single version you ask for |
 
 The legacy workflow keeps going when a single version fails, so the versions that did build
 on both arches still get their manifests.
+
+### Building one version by hand
+
+`build-one.yml` is the "build just this one" button: run it from the Actions tab, type a
+version, and it does the same amd64 + arm64 + manifest cycle the scheduled workflows do.
+It reads the version from the form rather than from a list in the file, so any version with
+a `gcc-<version>` directory works without editing the workflow — including a brand new one
+that is not wired into a scheduled workflow yet.
+
+| Input | Default | Effect |
+| ----- | ------- | ------ |
+| `version` | — | The GCC version to build. Must be a number with a matching `gcc-<version>` directory, or the run fails immediately. |
+| `push` | on | Push to Docker Hub. Turn it off for a build-and-test dry run — nothing is published and the manifest job is skipped. |
+| `latest` | off | Also re-point the `latest` tag at this build. |
+| `trigger_boost` | on | Trigger the downstream boost-cpp-docker build once the manifest is up. |
 
 ## Adding a version
 
 Copy the newest `gcc-<n>` directory to `gcc-<n+1>`, update the `gccver` and `suffix` ARGs in
 the `Dockerfile`, and switch the source between the release tarball and the `git clone` —
-both are in there, one commented out. Then point the workflow at it: bump `GCC_VERSION` in
-`build-current.yml` or `build-prerelease.yml`, and move the version it replaces into the
-`versions` list in `build-legacy.yml`.
+both are in there, one commented out. Run `build-one.yml` against it with `push` turned off
+to check that it actually compiles on both arches first. Then point the workflow at it: bump
+`GCC_VERSION` in `build-current.yml` or `build-prerelease.yml`, and move the version it
+replaces into the `versions` list in `build-legacy.yml`.
 
 ## License
 
