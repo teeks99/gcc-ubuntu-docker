@@ -46,6 +46,9 @@ RUN set -x \
  && make -j`nproc` \
  && make install-strip \
  && echo /usr/local/gcc-${gccver}/lib64 > /etc/ld.so.conf.d/gcc-${gccver}.conf \
+# Point ld.so at that runtime. Without this the base image's older libstdc++
+# stays in front and binaries using newer library symbols will not start
+ && ldconfig \
  && cd / \
  && rm -rf src \
 # Symlink new version of g++, gcc

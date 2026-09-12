@@ -45,6 +45,8 @@ RUN set -x \
  && make -j`nproc` \
  && make install-strip \
  && echo /usr/local/gcc-${gccver}/lib64 > /etc/ld.so.conf.d/gcc-${gccver}.conf \
+# No ldconfig here on purpose: jammy's libstdc++ is newer than the one gcc-11
+# builds and runs its binaries fine, so it stays in front of this one
  && cd / \
  && rm -rf src \
 # Symlink new version of g++, gcc

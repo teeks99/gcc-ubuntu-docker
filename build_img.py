@@ -2,7 +2,6 @@ import sys
 import subprocess
 import datetime
 import argparse
-import re
 import json
 import platform
 
@@ -43,22 +42,151 @@ def build(version):
     return image
 
 
+SMOKE_PASSED = "SMOKE TEST PASSED"
+
+# Compiled and run inside the image by the smoke test. Reports the gcc version
+# it was built with and the libstdc++ it picked up, so a build log shows which
+# standard library came along with the compiler.
+HELLO_WORLD = """\
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main()
+{
+    std::vector<std::string> words = {"hello", "world"};
+    std::string message;
+    for (const std::string& word : words)
+    {
+        if (!message.empty())
+        {
+            message += ", ";
+        }
+        message += word;
+    }
+
+    std::cout << message << std::endl;
+    std::cout << "gcc major: " << __GNUC__ << std::endl;
+    std::cout << "libstdc++: " << __GLIBCXX__ << std::endl;
+    return 0;
+}
+"""
+
+# The other language these images are configured for: --enable-languages=c,c++,
+# and gcc gets the same unversioned symlink treatment as g++.
+HELLO_WORLD_C = """\
+#include <stdio.h>
+
+int main(void)
+{
+    printf("hello, world\\n");
+    printf("gcc major: %d\\n", __GNUC__);
+    return 0;
+}
+"""
+
+# Fed to bash on the container's stdin, with the gcc version as $1. Checks the
+# versioned compilers and both unversioned symlinks, builds and runs hello world
+# in C and C++, then makes sure the libstdc++ those binaries pick up at run time
+# is no older than the one they were built against.
+SMOKE_TEST = """\
+set -eu
+
+version="$1"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
+
+fail() {
+    echo "SMOKE TEST FAILED: $*" >&2
+    exit 1
+}
+
+contains() {
+    case "$1" in
+        *"$2"*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+check_version() {
+    compiler="$1"
+    echo "--- $compiler --version"
+    output="$("$compiler" --version 2>&1)" || fail "could not run $compiler --version"
+    echo "$output"
+    contains "$output" "(GCC) $version." \\
+        || fail "$compiler is not gcc version $version"
+}
+
+build_and_run() {
+    label="$1"
+    compiler="$2"
+    src="$3"
+    shift 3
+    echo "--- $compiler $* -o hello_$label $src"
+    "$compiler" "$@" -o "$work/hello_$label" "$work/$src" \\
+        || fail "$compiler $* could not compile $src"
+    output="$("$work/hello_$label" 2>&1)" || fail "the $label hello world would not run"
+    echo "$output"
+    contains "$output" "hello, world" \\
+        || fail "the $label hello world printed the wrong thing"
+    contains "$output" "gcc major: $version" \\
+        || fail "the $label hello world was not built by gcc $version"
+}
+
+# The newest symbol version a libstdc++ carries, e.g. GLIBCXX_3.4.32.
+newest_glibcxx() {
+    objdump -T "$1" | grep -oE "GLIBCXX_3[.]4[.][0-9]+" | sort -uV | tail -1
+}
+
+cat > "$work/hello.cpp" <<'END_OF_HELLO_WORLD'
+""" + HELLO_WORLD + """END_OF_HELLO_WORLD
+
+cat > "$work/hello.c" <<'END_OF_HELLO_WORLD_C'
+""" + HELLO_WORLD_C + """END_OF_HELLO_WORLD_C
+
+# The versioned binaries, plus the unversioned symlinks the Dockerfile makes.
+check_version "g++-$version"
+check_version "gcc-$version"
+check_version g++
+check_version gcc
+
+# Both languages, and the newer dialect people come to a hand-built gcc for.
+build_and_run cxx17 "g++-$version" hello.cpp -std=c++17
+build_and_run c11 "gcc-$version" hello.c -std=c11
+build_and_run cxx20 g++ hello.cpp -std=c++20
+
+# Compiling is only half the job. g++ links against the libstdc++ sitting next
+# to it, but ld.so hands the program whatever its cache resolves at run time. If
+# that is the older copy from the base image, anything reaching for a newer
+# library symbol dies on startup even though it compiled cleanly here.
+echo "--- libstdc++ the hello world runs against"
+ldd "$work/hello_cxx20" || fail "could not run ldd on the hello world"
+compiler_lib="$("g++-$version" -print-file-name=libstdc++.so.6)"
+[ -f "$compiler_lib" ] || fail "g++-$version cannot find its own libstdc++.so.6"
+runtime_lib="$(ldd "$work/hello_cxx20" | awk '$1 == "libstdc++.so.6" { print $3 }')"
+[ -f "$runtime_lib" ] || fail "ld.so did not resolve libstdc++.so.6 to a file"
+compiler_abi="$(newest_glibcxx "$compiler_lib")"
+runtime_abi="$(newest_glibcxx "$runtime_lib")"
+echo "compiler links: $compiler_lib ($compiler_abi)"
+echo "ld.so resolves: $runtime_lib ($runtime_abi)"
+older="$({ echo "$compiler_abi"; echo "$runtime_abi"; } | sort -V | head -1)"
+if [ "$runtime_abi" != "$compiler_abi" ] && [ "$older" = "$runtime_abi" ]; then
+    fail "ld.so resolves libstdc++ to $runtime_abi, older than the $compiler_abi that g++-$version builds against, so binaries using newer library symbols will not start"
+fi
+
+""" + 'echo "' + SMOKE_PASSED + '"\n'
+
+
 def test(image, test_version):
-    cmd = f"docker run --rm {image.image} g++-{test_version} --version"
-    re_expected = f"g\\+\\+-{test_version}.*\\) {test_version}\\."
-    try:
-        print(cmd)
-        output = subprocess.check_output(cmd, shell=True)
-        if not re.search(re_expected, output.decode()):
-            msg = f"Expected regex: \n{re_expected}\n"
-            msg += f"Not found in actual output: \n{output}\n"
-            raise AssertionError(msg)
-        else:
-            print("Correctly got:")
-            print(output.decode())
-    except Exception:
-        print("Failure in command: " + cmd)
-        raise
+    cmd = f"docker run --rm -i {image.image} bash -s {test_version}"
+    print(cmd)
+    result = subprocess.run(
+        cmd, shell=True, input=SMOKE_TEST.encode(),
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output = result.stdout.decode()
+    print(output)
+    if result.returncode != 0 or SMOKE_PASSED not in output:
+        raise AssertionError(f"Smoke test failed for {image.image}")
 
 
 def tag_timestamp(base_image, version):

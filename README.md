@@ -65,12 +65,29 @@ working `docker` CLI, and shells out to `docker` for everything.
 For each requested version it will, by default:
 
 1. `docker build --pull --no-cache` the matching `gcc-<version>` directory,
-2. test the result by running `g++-<version> --version` inside it and checking the output,
+2. smoke test the result (see below),
 3. apply a timestamp tag,
 4. optionally push, and optionally combine per-arch builds into a manifest.
 
 The default repo is `test/gcc`, so a bare run builds and tags locally without touching
 Docker Hub. At least one `-v` is required; repeat it to act on several versions.
+
+### The smoke test
+
+Step 2 pipes a shell script into the fresh image and checks that it reaches
+`SMOKE TEST PASSED`. The script:
+
+* runs `--version` on `g++-<version>`, `gcc-<version>` and the unversioned `g++` and `gcc`
+  symlinks, and checks each one reports `(GCC) <version>.`,
+* compiles and runs a C++ hello world with `g++-<version> -std=c++17`, a C one with
+  `gcc-<version> -std=c11`, and the C++ one again through the `g++` symlink at `-std=c++20`,
+  checking each program prints what it should and reports the expected `__GNUC__`,
+* compares the newest `GLIBCXX_3.4.x` symbol version in the libstdc++ that `g++` links
+  against with the one `ld.so` actually resolves at run time, and fails if the run-time copy
+  is older. That is the base image's libstdc++ winning over the freshly built one, which
+  makes programs that use newer library symbols compile cleanly and then die on startup.
+
+Use `--no-test` to skip it.
 
 ```bash
 # Build and test one version locally
