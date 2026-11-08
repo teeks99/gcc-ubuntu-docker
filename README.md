@@ -16,6 +16,8 @@ version will build against.
 | 16 | `noble` (24.04) | `releases/gcc-16` git branch | current workflow (also tagged `latest`) |
 | 17 | `noble` (24.04) | `master` git branch (development snapshot) | pre-release workflow |
 
+As of 2026-11-08.
+
 Older versions (GCC < 9) are no longer built; they no longer compile and their Ubuntu bases
 are out of support.
 
