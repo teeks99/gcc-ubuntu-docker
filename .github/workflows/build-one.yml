@@ -1,0 +1,124 @@
+name: Build One GCC Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'GCC version to build (needs a matching gcc-<version> directory)'
+        required: true
+        type: string
+      push:
+        description: 'Push to Docker Hub (uncheck for a build/test-only dry run)'
+        type: boolean
+        default: true
+      latest:
+        description: 'Also point the latest tag at this build'
+        type: boolean
+        default: false
+      trigger_boost:
+        description: 'Trigger the boost-cpp-docker build afterwards'
+        type: boolean
+        default: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: check
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+$ ]]; then
+            echo "::error::Version must be a number, got '$VERSION'"
+            exit 1
+          fi
+          if [[ ! -d "gcc-$VERSION" ]]; then
+            echo "::error::No gcc-$VERSION directory in this repo. Available: $(ls -d gcc-* | tr '\n' ' ')"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  build-amd64:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and Push AMD64
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          PUSH_FLAG: ${{ inputs.push && '-p' || '' }}
+        run: |
+          python build_img.py -v "$VERSION" -r teeks99/gcc-ubuntu $PUSH_FLAG -T -l amd64_log.json --arch
+      - name: Upload Artifact
+        if: ${{ inputs.push }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: amd64-log
+          path: amd64_log.json
+
+  build-arm64:
+    needs: validate
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and Push ARM64
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          PUSH_FLAG: ${{ inputs.push && '-p' || '' }}
+        run: |
+          python build_img.py -v "$VERSION" -r teeks99/gcc-ubuntu $PUSH_FLAG -T -l arm64_log.json --arch
+      - name: Upload Artifact
+        if: ${{ inputs.push }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm64-log
+          path: arm64_log.json
+
+  create-manifest:
+    # Nothing was pushed on a dry run, so there are no per-arch tags to join.
+    if: ${{ inputs.push }}
+    needs: [validate, build-amd64, build-arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+      - name: Parse and Create Manifest
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          LATEST_FLAG: ${{ inputs.latest && '--latest' || '' }}
+        run: |
+          AMD64_TAG=$(jq -r --arg v "$VERSION" '.versions[$v].timestamp' amd64-log/amd64_log.json)
+          ARM64_TAG=$(jq -r --arg v "$VERSION" '.versions[$v].timestamp' arm64-log/arm64_log.json)
+          echo "AMD64 tag: $AMD64_TAG"
+          echo "ARM64 tag: $ARM64_TAG"
+          python build_img.py -v "$VERSION" -r teeks99/gcc-ubuntu --manifest-only $AMD64_TAG $ARM64_TAG $LATEST_FLAG
+      - name: Trigger boost-cpp-docker build
+        if: ${{ inputs.trigger_boost }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.BOOST_CPP_PAT }}
+          repository: teeks99/boost-cpp-docker
+          event-type: build-boost-image
+          client-payload: '{"compiler": "gcc", "version": "${{ needs.validate.outputs.version }}"}'
