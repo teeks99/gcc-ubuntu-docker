@@ -62,7 +62,8 @@ re-pointed every time the images are rebuilt.
 ## Building with build_img.py
 
 `build_img.py` drives the whole build/test/tag/push/manifest cycle. It needs Python 3 and a
-working `docker` CLI, and shells out to `docker` for everything.
+working `docker` CLI with the buildx plugin, which the manifest step uses, and shells out to
+`docker` for everything.
 
 For each requested version it will, by default:
 

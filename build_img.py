@@ -212,19 +212,14 @@ def push_image(image):
 
 
 def create_and_push_manifest(version_tag, amend_tags):
+    # Not `docker manifest create`: it rejects a source that is itself an index,
+    # which a per-arch push becomes once the build attaches a provenance
+    # attestation (the default with Docker's containerd image store).
+    # imagetools takes either kind, and creates and pushes in one step.
     manifest_image = Image(options.repo, version_tag)
-    cmd = f"docker manifest rm {manifest_image.image}"
-    try:
-        run_my_cmd(cmd)
-    except subprocess.CalledProcessError:
-        pass
-
-    cmd = f"docker manifest create {manifest_image.image}"
+    cmd = f"docker buildx imagetools create --tag {manifest_image.image}"
     for tag in amend_tags:
-        cmd += f" --amend {options.repo}:{tag}"
-    run_my_cmd(cmd)
-
-    cmd = f"docker manifest push {manifest_image.image}"
+        cmd += f" {options.repo}:{tag}"
     run_my_cmd(cmd)
 
 
