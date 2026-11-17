@@ -45,9 +45,12 @@ RUN set -x \
   --program-suffix=-${suffix} \
  && make -j`nproc` \
  && make install-strip \
- && echo /usr/local/gcc-${gccver}/lib64 > /etc/ld.so.conf.d/gcc-${gccver}.conf \
+ && echo /usr/local/gcc-${gccver}/lib64 > /etc/ld.so.conf.d/00-gcc-${gccver}.conf \
 # Point ld.so at that runtime. Without this the base image's older libstdc++
-# stays in front and binaries using newer library symbols will not start
+# stays in front and binaries using newer library symbols will not start.
+# The 00- matters: ldconfig reads ld.so.conf.d in name order and the first
+# directory with the library wins, and on arm64 the system's
+# aarch64-linux-gnu.conf sorts ahead of a plain gcc-*.conf
  && ldconfig \
  && cd / \
  && rm -rf src \

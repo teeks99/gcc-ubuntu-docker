@@ -89,6 +89,10 @@ Step 2 pipes a shell script into the fresh image and checks that it reaches
   against with the one `ld.so` actually resolves at run time, and fails if the run-time copy
   is older. That is the base image's libstdc++ winning over the freshly built one, which
   makes programs that use newer library symbols compile cleanly and then die on startup.
+  The GCC 12 and later Dockerfiles avoid it by naming their entry `00-gcc-<version>.conf`:
+  `ldconfig` reads `/etc/ld.so.conf.d` in name order and the first directory with the
+  library wins, and on arm64 a plain `gcc-*` name sorts behind the system's
+  `aarch64-linux-gnu.conf`.
 
 Use `--no-test` to skip it.
 
